@@ -1,0 +1,110 @@
+<html>
+
+<head>
+  <title>Embedding Elm</title>
+  <script src="elm.js"></script>
+  <style>
+  body {
+    background-image: url('resources/texture.png');
+    background-color: #d3d7cf;
+    font-family: "Lucida Grande","Trebuchet MS","Bitstream Vera Sans",Verdana,Helvetica,sans-serif;
+    font-size: 14px;
+  }
+  #elm-short-url {
+    width:  400px;
+    height: 200px;
+    background-color: white;
+    border: 1px solid #babdb6;
+  }
+  #column {
+     width: 420px;
+     display: block;
+     margin-left: auto;
+     margin-right: auto;
+  }
+  </style>
+</head>
+
+<body>
+<div id="column">
+  <h1>Shorten URL</h1>
+
+  <p>This demo shows interop between Elm & Javascript using the Google URL shortener API JS client to: </p>
+  <ol>
+    <li>embed an Elm program in HTML</li>
+    <li>send events back and forth between Elm and JavaScript</li>
+    <li>query the user for an events related to shortening a URL</li>
+  </ol>
+  <p>The history of the URLs requested and shortened are stored in the Elm program, but the rest is HTML, CSS, and JS.
+     See the <a href="http://github.com/adkelley/elm-short-url">source code</a>
+     for more info.
+  </p>
+
+  <form 
+  name = "shortform"
+  method = "input" 
+  onsubmit = "return shortenUrl();" 
+  >
+
+  long url: <input name="longUrl"><br> 
+
+  </form> 
+
+  <p>short url:  <span id="short-url">""</span></p>
+
+  <div id="elm-short-url"></div>
+
+  <p>
+    Reset the form:
+    <button onclick="resetForm()">Reset</button>
+  </p>
+
+  <p>You have shortened <span id="total-count">0</span> URLs in total.</p>
+
+</div>
+</body>
+
+<script type="text/javascript">
+  // Show the stamp module in the "elm-short-url" div.
+  var div =
+    document.getElementById('elm-short-url');
+
+  var defaultValues = { dispatchReset: []
+                      , dispatchShorten: ""
+                      };
+
+  var shortUrl =
+    Elm.embed(Elm.ShortUrl, div, defaultValues);
+
+
+// Reset the url submission form
+
+  function resetForm() {
+    shortUrl.ports.dispatchReset.send([]);
+  }
+
+
+  function shortenUrl() {
+    var url = document.shortform.longUrl.value;
+    shortUrl.ports.dispatchShorten.send(url);
+    // stops page from refreshing and reinitializing the model!!!
+    return false;  
+   } 
+
+
+  // Always show the latest count of urls shortened, which is exported
+  // from the ShortUrl module as the 'count' event stream.
+
+  var totalCount = document.getElementById('total-count');
+  shortUrl.ports.count.subscribe(function(count) {
+      totalCount.innerHTML = count;
+  });
+
+  var shortened = document.getElementById('short-url');
+  shortUrl.ports.short.subscribe(function(short) {
+      shortened.innerHTML = short;
+  });
+
+</script>
+
+</html>
